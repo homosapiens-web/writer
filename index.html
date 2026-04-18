@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Tracker Pro - 專業寫作編輯器</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Toolbar -->
+        <header class="toolbar">
+            <div class="toolbar-group">
+                <button class="tool-btn" title="上一步 (Ctrl+Z)" onclick="execCmd('undo')"><i class="fas fa-undo"></i></button>
+                <button class="tool-btn" title="下一步 (Ctrl+Y)" onclick="execCmd('redo')"><i class="fas fa-redo"></i></button>
+            </div>
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <select class="tool-select" id="fontName" title="字型" onchange="execCmd('fontName', this.value)">
+                    <option value="Arial">Arial</option>
+                    <option value="Inter">Inter</option>
+                    <option value="'Times New Roman'">Times New Roman</option>
+                    <option value="'Noto Sans TC'">思源黑體</option>
+                    <option value="微軟正黑體">微軟正黑體</option>
+                    <option value="標楷體">標楷體</option>
+                </select>
+                
+                <select class="tool-select" id="fontSize" title="字體大小" onchange="execCmd('fontSize', this.value)">
+                    <option value="1">10pt (極小)</option>
+                    <option value="2">13pt (小)</option>
+                    <option value="3" selected>16pt (標準)</option>
+                    <option value="4">18pt (中)</option>
+                    <option value="5">24pt (大)</option>
+                    <option value="6">32pt (極大)</option>
+                    <option value="7">48pt (標題)</option>
+                </select>
+            </div>
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <select class="tool-select" id="formatBlock" title="段落樣式" onchange="execCmd('formatBlock', this.value)">
+                    <option value="P">段落 (內文)</option>
+                    <option value="H1">標題 1 (H1)</option>
+                    <option value="H2">標題 2 (H2)</option>
+                    <option value="H3">標題 3 (H3)</option>
+                    <option value="H4">標題 4 (H4)</option>
+                </select>
+            </div>
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button class="tool-btn" title="粗體" onclick="execCmd('bold')" id="btn-bold"><i class="fas fa-bold"></i></button>
+                <button class="tool-btn" title="斜體" onclick="execCmd('italic')" id="btn-italic"><i class="fas fa-italic"></i></button>
+                <button class="tool-btn" title="底線" onclick="execCmd('underline')" id="btn-underline"><i class="fas fa-underline"></i></button>
+                <button class="tool-btn" title="刪除線" onclick="execCmd('strikeThrough')" id="btn-strikethrough"><i class="fas fa-strikethrough"></i></button>
+            </div>
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group color-picker-group">
+                <i class="fas fa-font" style="color: var(--text-muted); font-size: 14px; margin-right: 4px;"></i>
+                <input type="color" class="color-picker" id="foreColor" onchange="execCmd('foreColor', this.value)" oninput="execCmd('foreColor', this.value)" title="光譜選色器">
+                <div class="color-grid" title="快速色格">
+                    <button class="color-swatch" style="background-color: #1F2937;" onclick="execCmd('foreColor', '#1F2937')"></button>
+                    <button class="color-swatch" style="background-color: #EF4444;" onclick="execCmd('foreColor', '#EF4444')"></button>
+                    <button class="color-swatch" style="background-color: #3B82F6;" onclick="execCmd('foreColor', '#3B82F6')"></button>
+                    <button class="color-swatch" style="background-color: #10B981;" onclick="execCmd('foreColor', '#10B981')"></button>
+                    <button class="color-swatch" style="background-color: #F59E0B;" onclick="execCmd('foreColor', '#F59E0B')"></button>
+                </div>
+            </div>
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button class="tool-btn" title="置左對齊" onclick="execCmd('justifyLeft')"><i class="fas fa-align-left"></i></button>
+                <button class="tool-btn" title="置中對齊" onclick="execCmd('justifyCenter')"><i class="fas fa-align-center"></i></button>
+                <button class="tool-btn" title="置右對齊" onclick="execCmd('justifyRight')"><i class="fas fa-align-right"></i></button>
+            </div>
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button class="tool-btn" title="減少縮排" onclick="execCmd('outdent')"><i class="fas fa-outdent"></i></button>
+                <button class="tool-btn" title="增加縮排" onclick="execCmd('indent')"><i class="fas fa-indent"></i></button>
+            </div>
+
+            <div class="toolbar-spacer"></div>
+
+            <div class="toolbar-group">
+                <button class="action-btn" onclick="saveDocument()"><i class="fas fa-save"></i> 存檔</button>
+            </div>
+        </header>
+
+        <!-- Main Content Layout -->
+        <main class="main-content">
+            <!-- Left Sidebar -->
+            <aside class="sidebar left-sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-bullseye"></i> 寫作目標</h3>
+                    <div class="goal-input">
+                        <input type="number" id="wordGoal" value="1000" min="1" title="設定目標字數">
+                        <span>字</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-circular">
+                            <svg viewBox="0 0 36 36">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="circle-progress" id="progressCircle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="progress-text" id="progressPercentage">0%</div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-clock"></i> 計時器</h3>
+                    <div class="timer-display" id="timerDisplay">00:00:00</div>
+                    <div class="timer-controls">
+                        <button class="btn-timer" id="btnStartTimer" title="開始" onclick="startTimer()"><i class="fas fa-play"></i></button>
+                        <button class="btn-timer" id="btnPauseTimer" title="暫停" onclick="pauseTimer()"><i class="fas fa-pause"></i></button>
+                        <button class="btn-timer" id="btnResetTimer" title="重置" onclick="resetTimer()"><i class="fas fa-stop"></i></button>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-chart-bar"></i> 即時字數統計</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">包含標點</div>
+                            <div class="stat-value" id="countWithPunc">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">不含標點</div>
+                            <div class="stat-value" id="countWithoutPunc">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-magic"></i> 快速工具</h3>
+                    <button class="action-btn outline full-width" onclick="convertPunctuation()"><i class="fas fa-exchange-alt"></i> 半形轉全形</button>
+                    <button class="action-btn outline full-width" onclick="copyAndFix()"><i class="fas fa-copy"></i> 複製全文</button>
+                    <div style="height: 10px;"></div>
+                    <button class="action-btn full-width btn-export-pdf" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> 匯出 PDF</button>
+                    <button class="action-btn full-width btn-export-word" onclick="exportWord()"><i class="fas fa-file-word"></i> 匯出 Word</button>
+                </div>
+            </aside>
+
+            <!-- Editor Center Area -->
+            <div class="editor-area">
+                <!-- Tab Bar -->
+                <div class="tabs-bar" id="tabsBar">
+                    <!-- Tabs will be generated by JS -->
+                </div>
+
+                <!-- Page Size Controls -->
+                <div class="page-controls">
+                    <label><i class="fas fa-file-alt"></i> 版面大小：</label>
+                    <select id="pageSize" onchange="changePageSize(this.value)">
+                        <option value="A4">A4 (預設)</option>
+                        <option value="Letter">Letter</option>
+                        <option value="Responsive">自適應 (滿版)</option>
+                    </select>
+                </div>
+
+                <!-- Actual Editor Container -->
+                <div class="editor-scroll-container">
+                    <div class="editor-page size-a4" id="editor" contenteditable="true" spellcheck="true">
+                        <h1>開始寫作之旅...</h1>
+                        <p>在這裡輸入您的文字，支援 <strong>粗體</strong>、<em>斜體</em> 等文書處理功能。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar (TOC) -->
+            <aside class="sidebar right-sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-list-ul"></i> 文件目錄</h3>
+                    <div class="toc-container" id="tocContainer">
+                        <!-- TOC generated by JS -->
+                        <div class="toc-empty">尚無標題</div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">訊息</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
